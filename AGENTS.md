@@ -9,7 +9,7 @@
 
 ## 2. Commands
 - **Install dependencies:** None (single HTML file)
-- **Run locally:** `open app/index.html`
+- **Run locally:** `node server.js` then open http://localhost:3000
 - **Run deterministic tests:** None yet (manual check in the browser)
 - **Run model evals:** None yet (planned for Build 4)
 

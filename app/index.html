@@ -97,6 +97,8 @@
   }
   #phrasebook li strong { color: var(--accent); }
   .empty { color: var(--muted); }
+  .status { margin-top: 10px; color: var(--muted); }
+  .status.error { color: #b42318; background: #fef3f2; border: 1px solid #fecdca; border-radius: 6px; padding: 10px 12px; }
   .hidden { display: none; }
 </style>
 </head>
@@ -115,7 +117,8 @@
       <button id="upload" type="button" disabled>Upload PDF</button>
       <span class="soon">Coming soon</span>
     </div>
-    <p class="note">Demo: this prototype always shows the same built-in example. Editing the text does not change the results.</p>
+    <p class="note">Your text is sent to an AI model to find phrases. Don’t paste private or confidential information.</p>
+    <p id="status" class="status hidden" role="status" aria-live="polite"></p>
   </section>
 
   <section id="results-section" class="hidden">
@@ -131,103 +134,7 @@
 </main>
 
 <script>
-  // Hard-coded demo data. No AI, no network.
-  var PHRASES = [
-    {
-      phrase: "move the needle",
-      meaning: "To make a clear, noticeable difference to a result that matters, like sales or customer satisfaction.",
-      sentence: "Every quarter we ask which projects will really move the needle for our customers.",
-      sceneType: "Team meeting",
-      scene: [
-        "Maya: We have ten ideas on the list. Which one matters most?",
-        "Leo: The checkout fix. It could really move the needle on sales.",
-        "Maya: Agreed. Let's drop the small stuff for now.",
-        "Leo: I'll write up the plan today."
-      ],
-      works: "Your sentence uses the phrase for a result you can notice, which is how people use it.",
-      tip: "Name the result (for example, 'move the needle on retention') so the listener knows what is changing."
-    },
-    {
-      phrase: "double down on",
-      meaning: "To put even more effort or money into something that is already working.",
-      sentence: "Once we find a winner, we double down on it instead of spreading ourselves thin.",
-      sceneType: "Class discussion",
-      scene: [
-        "Professor: Our case company has one product that sells well. What should it do?",
-        "Priya: I would double down on it and cut the weaker products.",
-        "Professor: Is that risky?",
-        "Priya: A little, but focus usually beats spreading out."
-      ],
-      works: "You used 'double down on' with something that was already succeeding, which fits the meaning.",
-      tip: "Follow it with a noun or -ing phrase ('double down on marketing'). Do not say 'double down' alone with 'on' missing."
-    },
-    {
-      phrase: "low-hanging fruit",
-      meaning: "The easy tasks or quick wins you can finish first because they take little effort.",
-      sentence: "Early on, go after the low-hanging fruit, the easy fixes that users notice right away.",
-      sceneType: "Coffee chat",
-      scene: [
-        "Sam: My to-do list is huge. Where do I start?",
-        "Ana: Start with the low-hanging fruit, like the typos and broken links.",
-        "Sam: Quick wins first, then the big projects?",
-        "Ana: Exactly. It builds momentum."
-      ],
-      works: "You described a task that is easy and gives a quick result. That is the core idea.",
-      tip: "Add what the easy wins are, or what comes next, to make the sentence feel complete."
-    },
-    {
-      phrase: "on the same page",
-      meaning: "Everyone understands the plan and agrees on it.",
-      sentence: "Before any launch, I make sure engineering, design, and sales are on the same page.",
-      sceneType: "Team meeting",
-      scene: [
-        "Jo: Before we leave, are we all on the same page about the deadline?",
-        "Kim: I thought it was Friday.",
-        "Jo: It is Thursday. Let me fix that in the notes.",
-        "Kim: Good catch. Now we are on the same page."
-      ],
-      works: "You used it to talk about shared understanding between people, which is correct.",
-      tip: "It works well with a group ('the whole team is on the same page'). Try naming who needs to agree."
-    },
-    {
-      phrase: "circle back",
-      meaning: "To return to a topic later, usually after you have more information or time.",
-      sentence: "If a decision stalls, we park it and circle back once we have more data.",
-      sceneType: "Class discussion",
-      scene: [
-        "Student: I do not have the numbers for that question yet.",
-        "Professor: No problem. Let's circle back after the break.",
-        "Student: I can check the report by then.",
-        "Professor: Great. Next topic, then."
-      ],
-      works: "You used it to postpone a topic and return later, which matches how people say it.",
-      tip: "Add a time ('circle back on Monday') so it sounds like a real plan and not a way to avoid the topic."
-    },
-    {
-      phrase: "at the end of the day",
-      meaning: "When you think about everything, the most important point is this.",
-      sentence: "At the end of the day, product management is about solving real problems for real people.",
-      sceneType: "Coffee chat",
-      scene: [
-        "Chen: I keep going back and forth on both job offers.",
-        "Rosa: List the pros and cons. What matters most?",
-        "Chen: At the end of the day, I want to learn from good people.",
-        "Rosa: Then you already know your answer."
-      ],
-      works: "You used it to introduce your main conclusion, which is the usual job of this phrase.",
-      tip: "Put a comma after it and keep the point short. It is stronger when it states one clear conclusion."
-    }
-  ];
-
-  // "Your turn" setup lines and patterns to check the reply uses the phrase (any verb form).
-  var EXTRA = {
-    "move the needle": { who: "Maya", line: "We only have time for one project this month. Which one should we pick?", match: /mov(e|es|ed|ing) the needle/i },
-    "double down on": { who: "Professor", line: "The app's video feature is growing fast, but the other features are flat. What would you do?", match: /doubl(e|es|ed|ing) down/i },
-    "low-hanging fruit": { who: "Sam", line: "Our app has lots of small bugs. Where should we start?", match: /low[- ]hanging fruit/i },
-    "on the same page": { who: "Jo", line: "Before the client call, should we check that everyone agrees on the price?", match: /on the same page/i },
-    "circle back": { who: "Professor", line: "Do you have the survey results for this question yet?", match: /circl(e|es|ed|ing) back/i },
-    "at the end of the day": { who: "Rosa", line: "So, the big company or the startup? Which one will you choose?", match: /at the end of the day/i }
-  };
+  var PHRASES = []; // filled from the server response
 
   var canSpeak = "speechSynthesis" in window;
 
@@ -251,6 +158,8 @@
   var resultsEl = document.getElementById("results");
   var savedList = document.getElementById("saved-list");
   var emptyMsg = document.getElementById("empty-msg");
+  var sourceEl = document.getElementById("source");
+  var statusEl = document.getElementById("status");
 
   // Small helper: create an element with optional class and text (textContent only, so user input is never parsed as HTML).
   function el(tag, className, text) {
@@ -285,50 +194,11 @@
     listenBtn.addEventListener("click", function () { speakScene(item.scene); });
     card.appendChild(listenRow);
 
-    var extra = EXTRA[item.phrase];
-    card.appendChild(el("h4", null, "Your turn"));
-    var practice = el("div", "practice");
-    var inputId = "practice-" + index;
-    var setup = el("div", "scene");
-    setup.appendChild(el("div", "line", extra.who + ": " + extra.line));
-    practice.appendChild(setup);
-    var label = el("label", null, "Reply to " + extra.who + " using “" + item.phrase + "”");
-    label.setAttribute("for", inputId);
-    var input = el("textarea");
-    input.id = inputId;
-    input.rows = 2;
-    practice.appendChild(label);
-    practice.appendChild(input);
-
     var row = el("div", "row");
-    var checkBtn = el("button", null, "Check");
-    checkBtn.type = "button";
     var saveBtn = el("button", null, "Save to my phrasebook");
     saveBtn.type = "button";
-    row.appendChild(checkBtn);
     row.appendChild(saveBtn);
-    practice.appendChild(row);
-
-    var feedback = el("div", "feedback hidden");
-    feedback.setAttribute("aria-live", "polite");
-    practice.appendChild(feedback);
-    card.appendChild(practice);
-
-    checkBtn.addEventListener("click", function () {
-      feedback.className = "feedback";
-      feedback.textContent = "";
-      if (input.value.trim() === "") {
-        feedback.appendChild(el("div", "warn", "Type a sentence first, then press Check."));
-        return;
-      }
-      if (!extra.match.test(input.value)) {
-        feedback.appendChild(el("div", "tip", "Try using “" + item.phrase + "” in your reply."));
-        return;
-      }
-      feedback.appendChild(el("div", "works", "What works: " + item.works));
-      feedback.appendChild(el("div", "tip", "One suggestion: " + item.tip));
-      feedback.appendChild(el("div", "warn", "Example feedback only. A real check is coming later."));
-    });
+    card.appendChild(row);
 
     saveBtn.addEventListener("click", function () {
       if (saved.indexOf(index) === -1) {
@@ -354,17 +224,50 @@
     });
   }
 
-  findBtn.addEventListener("click", function () {
+  // Remove old cards and saved phrases (they belong to the previous search).
+  function clearResults() {
+    PHRASES = [];
+    saved = [];
     resultsEl.textContent = "";
-    PHRASES.forEach(function (item, i) { resultsEl.appendChild(buildCard(item, i)); });
-    // Re-mark already-saved cards so state stays consistent if the user clicks Find again.
-    saved.forEach(function (index) {
-      var btns = resultsEl.querySelectorAll(".card")[index].querySelectorAll("button");
-      btns[1].textContent = "Saved";
-      btns[1].disabled = true;
+    resultsSection.className = "hidden";
+    renderPhrasebook();
+  }
+
+  function showError(msg) {
+    statusEl.className = "status error";
+    statusEl.textContent = msg;
+  }
+
+  findBtn.addEventListener("click", function () {
+    var text = sourceEl.value.trim();
+    if (!text) { showError("Please paste some text first."); return; }
+    clearResults();
+    findBtn.disabled = true;
+    findBtn.textContent = "Finding phrases…";
+    statusEl.className = "status";
+    statusEl.textContent = "Reading your text. This can take a few seconds…";
+
+    fetch("/api/phrases", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: text })
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (data) {
+        if (!r.ok) throw new Error(data.error || "Something went wrong. Please try again.");
+        return data;
+      });
+    }).then(function (data) {
+      PHRASES = data.phrases;
+      PHRASES.forEach(function (item, i) { resultsEl.appendChild(buildCard(item, i)); });
+      statusEl.className = "status hidden";
+      resultsSection.className = "";
+      resultsSection.scrollIntoView({ behavior: "smooth" });
+    }).catch(function (err) {
+      showError(err instanceof TypeError ? "Could not reach the server. Is it running (node server.js)?" : err.message);
+    }).then(function () {
+      findBtn.disabled = false;
+      findBtn.textContent = "Find key phrases";
     });
-    resultsSection.className = "";
-    resultsSection.scrollIntoView({ behavior: "smooth" });
   });
 </script>
 </body>
