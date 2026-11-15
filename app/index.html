@@ -87,6 +87,8 @@
   .feedback .works { background: var(--good-bg); color: var(--good); padding: 8px 10px; border-radius: 4px; }
   .feedback .tip { background: var(--tip-bg); color: var(--tip); padding: 8px 10px; border-radius: 4px; margin-top: 6px; }
   .feedback .warn { color: var(--muted); }
+  .feedback .better { margin-top: 6px; font-weight: 600; }
+  .feedback > div + div { margin-top: 6px; }
   #phrasebook ul { list-style: none; margin: 0; padding: 0; }
   #phrasebook li {
     background: var(--card);
@@ -169,6 +171,105 @@
     return node;
   }
 
+  // "Your turn": the partner speaks a line, the learner replies, the server gives feedback.
+  // The conversation is just data: a turn {who, line} in, a text reply out. Typing is only one way
+  // to get the reply (getReply), so voice can replace it later without touching sendForFeedback.
+  var MAX_REPLY = 300;
+  var MAX_TRIES = 5;
+
+  function sendForFeedback(phrase, line, reply) {
+    return fetch("/api/feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phrase: phrase, line: line, reply: reply })
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (data) {
+        if (!r.ok) throw new Error(data.error || "Something went wrong. Please try again.");
+        return data;
+      });
+    });
+  }
+
+  function buildPractice(item, index) {
+    var turn = item.practice; // {who, line}
+    var tries = 0;
+    var wrap = el("div", "practice");
+    wrap.appendChild(el("h4", null, "Your turn"));
+
+    var setup = el("div", "scene");
+    setup.appendChild(el("div", "line", turn.who + ": " + turn.line));
+    wrap.appendChild(setup);
+
+    var inputId = "practice-" + index;
+    var label = el("label", null, "Reply to " + turn.who + " using “" + item.phrase + "”");
+    label.setAttribute("for", inputId);
+    var input = el("textarea");
+    input.id = inputId;
+    input.rows = 2;
+    input.maxLength = MAX_REPLY;
+    wrap.appendChild(label);
+    wrap.appendChild(input);
+
+    var row = el("div", "row");
+    var checkBtn = el("button", null, "Check");
+    checkBtn.type = "button";
+    var counter = el("span", "hint", MAX_REPLY + " characters left");
+    row.appendChild(checkBtn);
+    row.appendChild(counter);
+    wrap.appendChild(row);
+
+    var feedback = el("div", "feedback hidden");
+    feedback.setAttribute("aria-live", "polite");
+    wrap.appendChild(feedback);
+
+    function getReply() { return input.value.trim(); } // voice later: return the transcript here
+
+    input.addEventListener("input", function () {
+      counter.textContent = (MAX_REPLY - input.value.length) + " characters left";
+    });
+
+    function showFeedback(kind, text) {
+      var box = el("div", kind, text);
+      feedback.appendChild(box);
+      return box;
+    }
+
+    checkBtn.addEventListener("click", function () {
+      var reply = getReply();
+      feedback.className = "feedback";
+      feedback.textContent = "";
+      if (!reply) { showFeedback("warn", "Type a reply first, then press Check."); return; }
+      checkBtn.disabled = true;
+      checkBtn.textContent = "Checking…";
+      sendForFeedback(item.phrase, turn.who + ": " + turn.line, reply).then(function (fb) {
+        tries++;
+        showFeedback(fb.ok ? "works" : "tip", fb.feedback);
+        if (fb.better) showFeedback("better", "A better version: " + fb.better);
+        if (fb.ok) {
+          input.disabled = true;
+          checkBtn.textContent = "Done";
+          return; // button stays disabled
+        }
+        if (tries >= MAX_TRIES) {
+          input.disabled = true;
+          checkBtn.textContent = "Done";
+          showFeedback("warn", "That was your " + MAX_TRIES + " tries for this phrase. Read the better version above, say it out loud, and move on to the next card. You can do it!");
+          return;
+        }
+        showFeedback("warn", "Not quite yet. Edit your reply and press Check again (" + (MAX_TRIES - tries) + " tries left).");
+        checkBtn.disabled = false;
+        checkBtn.textContent = "Check";
+      }).catch(function (err) {
+        // A failed call does not count as a try.
+        showFeedback("warn", err instanceof TypeError ? "Could not reach the server. Is it running (node server.js)?" : err.message);
+        checkBtn.disabled = false;
+        checkBtn.textContent = "Check";
+      });
+    });
+
+    return wrap;
+  }
+
   function buildCard(item, index) {
     var card = el("article", "card");
     card.appendChild(el("h3", null, item.phrase));
@@ -193,6 +294,8 @@
     if (!canSpeak) listenBtn.disabled = true;
     listenBtn.addEventListener("click", function () { speakScene(item.scene); });
     card.appendChild(listenRow);
+
+    if (item.practice) card.appendChild(buildPractice(item, index));
 
     var row = el("div", "row");
     var saveBtn = el("button", null, "Save to my phrasebook");
