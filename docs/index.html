@@ -283,7 +283,8 @@
 
       <h3>3. How It Works Under the Hood & Riskiest Assumption (Week 2+)</h3>
       <p><strong>Riskiest Assumption:</strong> AI-picked phrases and scenario dialogues may feel generic rather than useful and natural to real learners. Success looks like: 3 classmates each use it on real class text and correctly use at least 3 new phrases in their own sentences, and say they would use it again next week.</p>
-      <p><strong>Simple Architecture:</strong> v1 is one local HTML page with built-in sample data and no backend. Real AI via an API key in .env comes in Build 2.</p>
+      <p><strong>How Build 2 tests it:</strong> I paste 3 real texts from my own classes (a reading, a lecture transcript, a podcast) and check whether at least 5 phrases per text are ones I would actually use.</p>
+      <p><strong>Simple Architecture:</strong> Build 2: browser page (app/index.html) → small local server (server.js on localhost:3000, which keeps the API key in .env) → OpenRouter AI model → 5–10 key phrases returned as JSON → shown on screen.</p>
 
       <h3>4. Unit Economics & Analytics Snapshot (Updated Weekly)</h3>
       <div class="grid-2">
@@ -292,8 +293,8 @@
           <div class="stat-value">$0 so far (no API costs yet)</div>
         </div>
         <div class="stat-box">
-          <div class="stat-label">Est. Cost Per User Run</div>
-          <div class="stat-value">To be measured</div>
+          <div class="stat-label">Cost Per Run</div>
+          <div class="stat-value" style="font-size: 14px; font-weight: 400;">Cost per run = input tokens × input price + output tokens × output price. Estimate: ~1,500 tokens in, ~1,000 out. Actual: to be measured on the first real run.</div>
         </div>
         <div class="stat-box">
           <div class="stat-label">User Evidence (Analytics from Build 2)</div>
@@ -304,6 +305,25 @@
           <div class="stat-value">TBD</div>
         </div>
       </div>
+
+      <h4>Cost Guardrails</h4>
+      <ul>
+        <li>$2 credit limit on the API key</li>
+        <li>A cheap model</li>
+        <li>Pasted text capped at ~3,000 words</li>
+        <li>Capped output length</li>
+        <li>No automatic retries</li>
+        <li>Token count and cost logged for every call</li>
+      </ul>
+
+      <h4>Roadmap</h4>
+      <ul>
+        <li><strong>Build 2:</strong> Key phrase detection with real AI.</li>
+        <li><strong>Build 3:</strong> Phrasebook with “known / to learn” marks, so the AI skips what you already know.</li>
+        <li><strong>Build 4:</strong> PDF and blog-link input, plus evals.</li>
+        <li><strong>Build 5:</strong> Cloud launch and scene practice.</li>
+        <li><strong>Later:</strong> Voice conversation (highest cost).</li>
+      </ul>
     </section>
 
     <!-- WEEKLY BUILD LOG (Updated at least twice a week via Git commits) -->
