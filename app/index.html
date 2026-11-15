@@ -101,6 +101,27 @@
   .empty { color: var(--muted); }
   .status { margin-top: 10px; color: var(--muted); }
   .status.error { color: #b42318; background: #fef3f2; border: 1px solid #fecdca; border-radius: 6px; padding: 10px 12px; }
+  .progress { margin: 0 0 8px; font-weight: 600; }
+  .progress .muted { font-weight: 400; color: var(--muted); font-size: 13px; margin-left: 8px; }
+  #stage { overflow-x: clip; }
+  #stage .card { touch-action: pan-y; cursor: grab; margin-bottom: 8px; }
+  #stage .card.dragging { cursor: grabbing; user-select: none; -webkit-user-select: none; }
+  #stage .card.snap { transition: transform 0.2s ease-out; }
+  #stage .card.fly { transition: transform 0.22s ease-in, opacity 0.22s ease-in; opacity: 0; }
+  #stage .card.hint-left { border-color: #b7791f; }
+  #stage .card.hint-right { border-color: var(--accent); }
+  #stage .card.enter-from-right { animation: slide-in-right 0.25s ease-out; }
+  #stage .card.enter-from-left { animation: slide-in-left 0.25s ease-out; }
+  @keyframes slide-in-right { from { transform: translateX(60px); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes slide-in-left { from { transform: translateX(-60px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .actions { justify-content: space-between; }
+  #swipe-hint { margin: 8px 0 0; }
+  .summary { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 16px; }
+  .summary p { margin: 0 0 6px; }
+  button.link { border: none; background: none; padding: 0; color: var(--accent); text-decoration: underline; font-size: 14px; }
+  @media (prefers-reduced-motion: reduce) {
+    #stage .card { animation: none !important; transition: none !important; }
+  }
   .hidden { display: none; }
 </style>
 </head>
@@ -125,19 +146,27 @@
 
   <section id="results-section" class="hidden">
     <h2>Key phrases</h2>
-    <div id="results"></div>
+    <div id="review">
+      <p id="progress" class="progress"></p>
+      <div id="stage"></div>
+      <div id="actions" class="row actions">
+        <button id="got-it" type="button">← Got it</button>
+        <button id="save-it" class="primary" type="button">Save →</button>
+      </div>
+      <p id="swipe-hint" class="hint">Swipe the card, press the buttons, or use the ← → arrow keys (arrow keys work when you are not typing). Got it hides the phrase for good. Save adds it to your phrasebook.</p>
+      <div id="summary" class="summary hidden"></div>
+    </div>
   </section>
 
   <section id="phrasebook">
     <h2>My phrasebook</h2>
-    <p id="empty-msg" class="empty">Nothing saved yet. Use "Save to my phrasebook" on a card.</p>
+    <p id="empty-msg" class="empty">Nothing saved yet. Press "Save →" on a card.</p>
     <ul id="saved-list"></ul>
+    <p><button id="reset-known" type="button" class="link hidden">Reset known phrases</button></p>
   </section>
 </main>
 
 <script>
-  var PHRASES = []; // filled from the server response
-
   var canSpeak = "speechSynthesis" in window;
 
   // Read the scene aloud with the browser's built-in voice (free, no AI, no network).
@@ -153,11 +182,66 @@
     });
   }
 
-  var saved = []; // in-page only, no storage
+  // ---- storage & helpers (no DOM) ----
+  var KNOWN_KEY = "scenespeak.known";
+  var BOOK_KEY = "scenespeak.phrasebook";
+  var memoryStore = {}; // used if localStorage is blocked (private mode), so the app still works for this visit
+
+  function storageGet(key) {
+    try {
+      var v = window.localStorage.getItem(key);
+      if (v !== null) return v;
+    } catch (e) { /* fall back to memory */ }
+    return memoryStore[key] === undefined ? null : memoryStore[key];
+  }
+  function storageSet(key, value) {
+    memoryStore[key] = value;
+    try { window.localStorage.setItem(key, value); } catch (e) { /* memory copy is enough */ }
+  }
+  function normPhrase(s) { return String(s).trim().toLowerCase().replace(/\s+/g, " "); }
+  function readList(key) {
+    try {
+      var v = JSON.parse(storageGet(key));
+      return Array.isArray(v) ? v : [];
+    } catch (e) { return []; }
+  }
+  function loadKnown() { return readList(KNOWN_KEY).filter(function (x) { return typeof x === "string"; }); }
+  function loadBook() {
+    return readList(BOOK_KEY).filter(function (x) { return x && typeof x.phrase === "string" && typeof x.meaning === "string"; });
+  }
+  function saveKnown(list) { storageSet(KNOWN_KEY, JSON.stringify(list)); }
+  function saveBook(list) { storageSet(BOOK_KEY, JSON.stringify(list)); }
+  function addKnown(list, phrase) {
+    var n = normPhrase(phrase);
+    return list.indexOf(n) === -1 ? list.concat([n]) : list;
+  }
+  function addToBook(list, item) {
+    var n = normPhrase(item.phrase);
+    var exists = list.some(function (x) { return normPhrase(x.phrase) === n; });
+    return exists ? list : list.concat([{ phrase: item.phrase, meaning: item.meaning }]);
+  }
+  // Split new results into the cards to show and how many were hidden because they are known.
+  function filterKnown(phrases, known) {
+    var deck = phrases.filter(function (p) { return known.indexOf(normPhrase(p.phrase)) === -1; });
+    return { deck: deck, hidden: phrases.length - deck.length };
+  }
+  // ---- end storage & helpers ----
+
+  // Analytics placeholder. Only logs to the console for now; PostHog comes later.
+  function track(eventName, properties) {
+    try { console.log("[track]", eventName, properties || {}); } catch (e) { /* ignore */ }
+  }
 
   var findBtn = document.getElementById("find");
   var resultsSection = document.getElementById("results-section");
-  var resultsEl = document.getElementById("results");
+  var progressEl = document.getElementById("progress");
+  var stageEl = document.getElementById("stage");
+  var actionsEl = document.getElementById("actions");
+  var hintEl = document.getElementById("swipe-hint");
+  var summaryEl = document.getElementById("summary");
+  var gotBtn = document.getElementById("got-it");
+  var saveBtn = document.getElementById("save-it");
+  var resetBtn = document.getElementById("reset-known");
   var savedList = document.getElementById("saved-list");
   var emptyMsg = document.getElementById("empty-msg");
   var sourceEl = document.getElementById("source");
@@ -296,50 +380,207 @@
     card.appendChild(listenRow);
 
     if (item.practice) card.appendChild(buildPractice(item, index));
-
-    var row = el("div", "row");
-    var saveBtn = el("button", null, "Save to my phrasebook");
-    saveBtn.type = "button";
-    row.appendChild(saveBtn);
-    card.appendChild(row);
-
-    saveBtn.addEventListener("click", function () {
-      if (saved.indexOf(index) === -1) {
-        saved.push(index);
-        renderPhrasebook();
-      }
-      saveBtn.textContent = "Saved";
-      saveBtn.disabled = true;
-    });
-
     return card;
   }
 
+  // ---- phrasebook (persistent) ----
+  var known = loadKnown();
+  var book = loadBook();
+
   function renderPhrasebook() {
     savedList.textContent = "";
-    emptyMsg.className = saved.length ? "empty hidden" : "empty";
-    saved.forEach(function (index) {
-      var item = PHRASES[index];
+    emptyMsg.className = book.length ? "empty hidden" : "empty";
+    book.forEach(function (item) {
       var li = el("li");
       li.appendChild(el("strong", null, item.phrase));
       li.appendChild(el("div", null, item.meaning));
       savedList.appendChild(li);
     });
+    resetBtn.className = known.length ? "link" : "link hidden";
+    resetBtn.textContent = "Reset known phrases (" + known.length + ")";
   }
 
-  // Remove old cards and saved phrases (they belong to the previous search).
-  function clearResults() {
-    PHRASES = [];
-    saved = [];
-    resultsEl.textContent = "";
-    resultsSection.className = "hidden";
+  resetBtn.addEventListener("click", function () {
+    if (!window.confirm("Show known phrases again in future results? This clears your list of " + known.length + " known phrase(s).")) return;
+    known = [];
+    saveKnown(known);
     renderPhrasebook();
+  });
+
+  // ---- card-by-card review ----
+  var hiddenCount = 0; // known phrases left out of this review
+  var deck = [];        // cards in this review
+  var pos = 0;          // index of the card on screen
+  var savedCount = 0;   // this review only
+  var knownCount = 0;   // this review only
+  var reviewActive = false;
+  var busy = false;     // true during the slide animation
+  var SWIPE_PX = 100;
+  var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function currentCard() { return stageEl.firstElementChild; }
+
+  function setButtons(enabled) { gotBtn.disabled = !enabled; saveBtn.disabled = !enabled; }
+
+  function showCard(enterFrom) {
+    window.speechSynthesis && canSpeak && window.speechSynthesis.cancel();
+    stageEl.textContent = "";
+    var card = buildCard(deck[pos], pos);
+    if (enterFrom && !reduceMotion) card.className += " enter-from-" + enterFrom;
+    stageEl.appendChild(card);
+    attachSwipe(card);
+    progressEl.textContent = "";
+    progressEl.appendChild(document.createTextNode((pos + 1) + " of " + deck.length));
+    if (hiddenCount > 0) progressEl.appendChild(el("span", "muted", hiddenCount + " known phrase" + (hiddenCount === 1 ? "" : "s") + " hidden"));
+    busy = false;
+    setButtons(true);
+  }
+
+  // direction: "left" = Got it (known), "right" = Save.
+  function decide(direction) {
+    if (!reviewActive || busy) return;
+    busy = true;
+    setButtons(false);
+    var item = deck[pos];
+    if (direction === "left") {
+      known = addKnown(known, item.phrase); saveKnown(known); knownCount++;
+    } else {
+      book = addToBook(book, item); saveBook(book); savedCount++;
+    }
+    renderPhrasebook();
+    track("card_swiped", { direction: direction, position: pos + 1, total: deck.length });
+
+    var card = currentCard();
+    function next() {
+      pos++;
+      if (pos >= deck.length) finishReview();
+      else showCard(direction === "left" ? "right" : "left");
+    }
+    if (reduceMotion || !card) { next(); return; }
+    card.classList.remove("dragging", "snap", "hint-left", "hint-right");
+    card.classList.add("fly");
+    card.style.transform = "translateX(" + (direction === "left" ? "-" : "") + "120%)";
+    setTimeout(next, 220);
+  }
+
+  function finishReview() {
+    reviewActive = false;
+    busy = false;
+    stageEl.textContent = "";
+    progressEl.textContent = "Review finished";
+    actionsEl.className = "row actions hidden";
+    hintEl.className = "hint hidden";
+    summaryEl.textContent = "";
+    summaryEl.className = "summary";
+    summaryEl.appendChild(el("p", null, "Saved to your phrasebook: " + savedCount));
+    summaryEl.appendChild(el("p", null, "Marked as known: " + knownCount));
+    var link = el("a", null, "Go to my phrasebook");
+    link.href = "#phrasebook";
+    summaryEl.appendChild(link);
+    track("review_finished", { saved: savedCount, known: knownCount, total: deck.length });
+  }
+
+  // Swipe with plain pointer events (mouse, trackpad and touch all use the same code).
+  function attachSwipe(card) {
+    var startX = 0, startY = 0, dx = 0, tracking = false, dragging = false, id = null;
+
+    card.addEventListener("pointerdown", function (e) {
+      if (busy || (e.pointerType === "mouse" && e.button !== 0)) return;
+      // Do not start a swipe from the practice box, buttons, or links.
+      if (e.target.closest("textarea, button, input, a, label")) return;
+      tracking = true; dragging = false; dx = 0;
+      startX = e.clientX; startY = e.clientY; id = e.pointerId;
+    });
+
+    card.addEventListener("pointermove", function (e) {
+      if (!tracking || e.pointerId !== id) return;
+      dx = e.clientX - startX;
+      var dy = e.clientY - startY;
+      if (!dragging) {
+        if (Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)) { tracking = false; return; } // vertical scroll
+        if (Math.abs(dx) < 8) return;
+        dragging = true;
+        card.setPointerCapture(id);
+        card.classList.remove("snap");
+        card.classList.add("dragging");
+        if (window.getSelection) window.getSelection().removeAllRanges();
+      }
+      card.style.transform = "translateX(" + dx + "px) rotate(" + (dx / 25) + "deg)";
+      card.classList.toggle("hint-left", dx < -SWIPE_PX);
+      card.classList.toggle("hint-right", dx > SWIPE_PX);
+    });
+
+    function release(e) {
+      if (!tracking || e.pointerId !== id) return;
+      var wasDragging = dragging;
+      tracking = false; dragging = false;
+      if (!wasDragging) return;
+      card.classList.remove("dragging", "hint-left", "hint-right");
+      if (e.type === "pointerup" && Math.abs(dx) > SWIPE_PX) {
+        decide(dx < 0 ? "left" : "right");
+      } else {
+        card.classList.add("snap"); // not far enough: spring back
+        card.style.transform = "";
+      }
+    }
+    card.addEventListener("pointerup", release);
+    card.addEventListener("pointercancel", release);
+  }
+
+  gotBtn.addEventListener("click", function () { decide("left"); });
+  saveBtn.addEventListener("click", function () { decide("right"); });
+
+  // Arrow keys, but never while the learner is typing (arrows move the cursor there).
+  document.addEventListener("keydown", function (e) {
+    if (!reviewActive || e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
+    var t = e.target;
+    if (t && (t.isContentEditable || /^(TEXTAREA|INPUT|SELECT)$/.test(t.tagName))) return;
+    if (e.key === "ArrowLeft") { e.preventDefault(); decide("left"); }
+    else if (e.key === "ArrowRight") { e.preventDefault(); decide("right"); }
+  });
+
+  function startReview(phrases) {
+    var f = filterKnown(phrases, known);
+    deck = f.deck;
+    hiddenCount = f.hidden;
+    pos = 0; savedCount = 0; knownCount = 0; busy = false;
+    summaryEl.className = "summary hidden";
+    if (deck.length === 0) {
+      reviewActive = false;
+      stageEl.textContent = "";
+      progressEl.textContent = "";
+      actionsEl.className = "row actions hidden";
+      hintEl.className = "hint hidden";
+      summaryEl.textContent = "";
+      summaryEl.className = "summary";
+      summaryEl.appendChild(el("p", null, "You already know every phrase from this text. Try a new text, or reset your known phrases below."));
+      var link = el("a", null, "Go to my phrasebook");
+      link.href = "#phrasebook";
+      summaryEl.appendChild(link);
+      return;
+    }
+    reviewActive = true;
+    actionsEl.className = "row actions";
+    hintEl.className = "hint";
+    showCard(null);
+  }
+
+  // Remove the old review when a new search starts.
+  function clearResults() {
+    reviewActive = false;
+    deck = [];
+    stageEl.textContent = "";
+    progressEl.textContent = "";
+    summaryEl.className = "summary hidden";
+    resultsSection.className = "hidden";
   }
 
   function showError(msg) {
     statusEl.className = "status error";
     statusEl.textContent = msg;
   }
+
+  renderPhrasebook();
 
   findBtn.addEventListener("click", function () {
     var text = sourceEl.value.trim();
@@ -360,10 +601,9 @@
         return data;
       });
     }).then(function (data) {
-      PHRASES = data.phrases;
-      PHRASES.forEach(function (item, i) { resultsEl.appendChild(buildCard(item, i)); });
       statusEl.className = "status hidden";
       resultsSection.className = "";
+      startReview(data.phrases);
       resultsSection.scrollIntoView({ behavior: "smooth" });
     }).catch(function (err) {
       showError(err instanceof TypeError ? "Could not reach the server. Is it running (node server.js)?" : err.message);
