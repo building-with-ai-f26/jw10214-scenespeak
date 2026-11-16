@@ -370,9 +370,10 @@
       <div class="log-entry">
         <h3>Build 2 · Smallest Local Version & PostHog (Due Nov 16)</h3>
         <ul>
-          <li><strong>What shipped:</strong> [Local working slice, PostHog verified on this page and the local app, PRD v2, and local setup in AGENTS.md]</li>
-          <li><strong>What broke / changed in PRD:</strong> [Fill in]</li>
-          <li><strong>Cost & time this week:</strong> $[0.00] · [0] hours</li>
+          <li><strong>What shipped:</strong> A working local app with real AI. Paste any text → <code>server.js</code> calls OpenRouter (Gemini 2.5 Flash Lite) → 5–8 key phrase cards, each with a meaning, the original sentence, and a scene. I also shipped real AI practice feedback (reply in a new scene, get feedback, retry up to 5 times), card-by-card swipe review (← Got it hides a phrase for good, Save → adds it to the phrasebook), PostHog on this page and the app (pageviews, clicks, 5 custom events, masked replays), PRD v2 with measured costs, and setup steps in AGENTS.md.</li>
+          <li><strong>Riskiest assumption, first evidence:</strong> Most phrases were useful (e.g. "scope creep", "get buy-in", "stepping on anyone's toes"), but the AI also picked weak ones like "stalls" and "go after". So I capped results at 8 phrases (quality over quantity) and added swipes: the share of "Save" swipes in PostHog will show how useful the picks really are.</li>
+          <li><strong>What broke / changed in PRD:</strong> (1) A short text failed with "the answer may have been cut off". It wasn't length: the model sometimes wrapped its JSON in extra characters. We now strip them, log the raw answer and finish_reason, and show honest error messages. (2) Old results stayed on screen after an error; now they clear. (3) The agent wanted to turn PostHog autocapture off for privacy, but Build 2 needs click data, so we kept it on with all text masked. PRD: new architecture, measured costs, cost guardrails, and the swipe review moved into Build 2.</li>
+          <li><strong>Cost & time this week:</strong> $0.006 in AI calls (26 calls, 21.1K tokens; $2 hard cap on the key) · about 3 hours</li>
         </ul>
       </div>
 
