@@ -241,11 +241,15 @@
     <section id="live-demo">
       <h2>Product Showcase (Prototype / Live App / 2-Min Video)</h2>
       <p>
-        <strong>Current Status:</strong> Build 1: local prototype<br />
-        <strong>Demo:</strong> Clickable prototype with sample data (no AI yet). Flow: paste text → key phrases → scene + listen &amp; repeat → "your turn" reply → feedback.
+        <strong>Current Status:</strong> Build 2: working local app with real AI (phrase detection + practice feedback), swipe review, and PostHog.<br />
+        <strong>Demo:</strong> Local app running on real AI. Flow: paste text → key phrases (one card at a time) → scene + listen &amp; repeat → "your turn" reply → AI feedback → swipe to save or mark as known.
       </p>
       <p>
-        <img src="demo.gif" alt="SceneSpeak prototype demo: finding key phrases, listening to a scene, replying in your turn, and getting feedback" style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 8px;" />
+        <img src="build2-app.png" alt="SceneSpeak Build 2 app: pasted text, a key phrase card '4 of 6' with meaning, scene, and a practice box, and Got it / Save buttons" style="max-width: 100%; width: 480px; height: auto; border: 1px solid #ddd; border-radius: 8px;" />
+      </p>
+      <p>
+        <img src="build2-posthog.png" alt="PostHog Activity page showing card_swiped, feedback_checked, and click events from the local app" style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 8px;" /><br />
+        <span class="meta">Build 2 evidence: the app (top) and PostHog's live Activity feed (above) showing custom events like card_swiped and feedback_checked arriving from the local app.</span>
       </p>
     </section>
 
@@ -300,21 +304,21 @@
       <h3>3. How It Works Under the Hood & Riskiest Assumption (Week 2+)</h3>
       <p><strong>Riskiest Assumption:</strong> AI-picked phrases and scenario dialogues may feel generic rather than useful and natural to real learners. Success looks like: 3 classmates each use it on real class text and correctly use at least 3 new phrases in their own sentences, and say they would use it again next week.</p>
       <p><strong>How Build 2 tests it:</strong> I paste 3 real texts from my own classes (a reading, a lecture transcript, a podcast) and check whether at least 5 phrases per text are ones I would actually use.</p>
-      <p><strong>Simple Architecture:</strong> Build 2: browser page (app/index.html) → small local server (server.js on localhost:3000, which keeps the API key in .env) → OpenRouter AI model → 5–10 key phrases returned as JSON → shown on screen.</p>
+      <p><strong>Simple Architecture:</strong> Build 2: browser page (app/index.html) → small local server (server.js on localhost:3000, which keeps the API key in .env) → OpenRouter AI model → up to 8 key phrases returned as JSON → shown one card at a time. Practice: the learner's reply goes to POST /api/feedback → the same AI model → short feedback. Analytics: PostHog records pageviews, clicks, and 5 custom events, with session replays that mask all user text. The phrasebook and the known list are stored in the browser's localStorage (no database).</p>
 
       <h3>4. Unit Economics & Analytics Snapshot (Updated Weekly)</h3>
       <div class="grid-2">
         <div class="stat-box">
           <div class="stat-label">Cumulative Build Spend</div>
-          <div class="stat-value">$0 so far (no API costs yet)</div>
+          <div class="stat-value">$0.006 so far (26 AI calls, 21.1K tokens, measured on OpenRouter). The API key has a $2 hard cap.</div>
         </div>
         <div class="stat-box">
           <div class="stat-label">Cost Per Run</div>
-          <div class="stat-value" style="font-size: 14px; font-weight: 400;">Cost per run = input tokens × input price + output tokens × output price. Estimate: ~1,500 tokens in, ~1,000 out. Actual: to be measured on the first real run.</div>
+          <div class="stat-value" style="font-size: 14px; font-weight: 400;">Cost per run = input tokens × input price + output tokens × output price. Estimate: ~1,500 tokens in, ~1,000 out. Actual: Find phrases ≈ $0.0004 per run (397 input / 914 output tokens, measured with the current prompt). Practice check ≈ $0.00005 per check (about 260 input / 70 output tokens, measured).</div>
         </div>
         <div class="stat-box">
           <div class="stat-label">User Evidence (Analytics from Build 2)</div>
-          <div class="stat-value">To be measured</div>
+          <div class="stat-value">PostHog live: pageviews, clicks, and 5 custom events (paste_submitted, phrases_generated, feedback_checked, card_swiped, review_finished). Session replays mask all user text.</div>
         </div>
         <div class="stat-box">
           <div class="stat-label">Sponsor Call (Week 6)</div>
@@ -334,8 +338,8 @@
 
       <h4>Roadmap</h4>
       <ul>
-        <li><strong>Build 2:</strong> Key phrase detection with real AI.</li>
-        <li><strong>Build 3:</strong> Phrasebook with “known / to learn” marks, so the AI skips what you already know.</li>
+        <li><strong>Build 2 (shipped):</strong> AI phrase detection, AI practice feedback, card-by-card swipe review, PostHog analytics.</li>
+        <li><strong>Build 3 (next):</strong> Send the known list so the AI skips phrases you already know, an Undo button after swiping, and a PostHog funnel.</li>
         <li><strong>Build 4:</strong> PDF and blog-link input, plus evals.</li>
         <li><strong>Build 5:</strong> Cloud launch and scene practice.</li>
         <li><strong>Later:</strong> Voice conversation (highest cost).</li>

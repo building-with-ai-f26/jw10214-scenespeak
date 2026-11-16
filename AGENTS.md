@@ -3,12 +3,12 @@
 > Give this file to your coding agent and check that it is using these instructions. Keep the stack, commands, and ground rules current.
 
 ## 1. Project Overview
-- **What this repo builds:** [1–2 sentence summary]
+- **What this repo builds:** SceneSpeak turns pasted real-life text (readings, slides, transcripts) into key English phrases, each with a short scene, AI practice feedback on the learner's reply, and a swipe-to-review flow.
 - **Primary user & core workflow:** [See the living PRD in `docs/index.html`]
-- **Tech stack:** [e.g., Python 3.12 / FastAPI / Next.js / SQLite / OpenRouter API]
+- **Tech stack:** Plain HTML/JS frontend (`app/index.html`), plain Node server (`server.js`, no packages), OpenRouter (`google/gemini-2.5-flash-lite`), PostHog analytics, browser `localStorage` (phrasebook and known list).
 
 ## 2. Commands
-- **Install dependencies:** None (single HTML file)
+- **Install dependencies:** Node 18+ (no packages to install). Then `cp .env.example .env` and add your `OPENROUTER_API_KEY`.
 - **Run locally:** `node server.js` then open http://localhost:3000
 - **Run deterministic tests:** None yet (manual check in the browser)
 - **Run model evals:** None yet (planned for Build 4)
