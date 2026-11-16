@@ -134,6 +134,7 @@
       text-transform: uppercase;
       letter-spacing: 0.04em;
     }
+    .stat-detail { margin-top: 6px; font-size: 14px; font-weight: 400; color: var(--muted); }
     .stat-value {
       font-size: 20px;
       font-weight: 700;
@@ -310,15 +311,18 @@
       <div class="grid-2">
         <div class="stat-box">
           <div class="stat-label">Cumulative Build Spend</div>
-          <div class="stat-value">$0.006 so far (26 AI calls, 21.1K tokens, measured on OpenRouter). The API key has a $2 hard cap.</div>
+          <div class="stat-value">$0.006</div>
+          <div class="stat-detail">26 AI calls, 21.1K tokens, measured on OpenRouter. The API key has a $2 hard cap.</div>
         </div>
         <div class="stat-box">
           <div class="stat-label">Cost Per Run</div>
-          <div class="stat-value" style="font-size: 14px; font-weight: 400;">Cost per run = input tokens × input price + output tokens × output price. Estimate: ~1,500 tokens in, ~1,000 out. Actual: Find phrases ≈ $0.0004 per run (397 input / 914 output tokens, measured with the current prompt). Practice check ≈ $0.00005 per check (about 260 input / 70 output tokens, measured).</div>
+          <div class="stat-value">≈ $0.0004</div>
+          <div class="stat-detail">Find phrases: 397 input / 914 output tokens. Practice check ≈ $0.00005 (about 260 input / 70 output tokens). Measured with the current prompt.</div>
         </div>
         <div class="stat-box">
           <div class="stat-label">User Evidence (Analytics from Build 2)</div>
-          <div class="stat-value">PostHog live: pageviews, clicks, and 5 custom events (paste_submitted, phrases_generated, feedback_checked, card_swiped, review_finished). Session replays mask all user text.</div>
+          <div class="stat-value">5 custom events</div>
+          <div class="stat-detail">PostHog live: pageviews, clicks, paste_submitted, phrases_generated, feedback_checked, card_swiped, review_finished. Session replays mask all user text.</div>
         </div>
         <div class="stat-box">
           <div class="stat-label">Sponsor Call (Week 6)</div>
