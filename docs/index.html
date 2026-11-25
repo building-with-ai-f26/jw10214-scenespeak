@@ -342,11 +342,18 @@
         <li>Token count and cost logged for every call</li>
       </ul>
 
+      <h4>PRD v3 (Build 3)</h4>
+      <ul>
+        <li><strong>Core metric:</strong> save rate = <code>phrase_saved</code> ÷ cards shown (are the AI's picks useful?)</li>
+        <li><strong>Funnel:</strong> Pageview → <code>paste_submitted</code> → <code>phrases_generated</code> → <code>card_swiped</code> → <code>phrase_saved</code></li>
+        <li><strong>Known issue:</strong> occasional 502 on the first AI call → add a retry or a clearer error in Build 4</li>
+      </ul>
+
       <h4>Roadmap</h4>
       <ul>
         <li><strong>Build 2 (shipped):</strong> AI phrase detection, AI practice feedback, card-by-card swipe review, PostHog analytics.</li>
-        <li><strong>Build 3 (next):</strong> Send the known list so the AI skips phrases you already know, an Undo button after swiping, and a PostHog funnel.</li>
-        <li><strong>Build 4:</strong> PDF and blog-link input, plus evals.</li>
+        <li><strong>Build 3 (shipped):</strong> PostHog funnel and <code>phrase_saved</code> event.</li>
+        <li><strong>Build 4:</strong> Send the known list so the AI skips phrases you already know, an Undo button after swiping, a retry or clearer error for the 502, PDF and blog-link input, plus evals.</li>
         <li><strong>Build 5:</strong> Cloud launch and scene practice.</li>
         <li><strong>Later:</strong> Voice conversation (highest cost).</li>
       </ul>
@@ -380,10 +387,13 @@
       <div class="log-entry">
         <h3>Build 3 · Build.exe: The Core Workflow (Due Nov 23)</h3>
         <ul>
-          <li><strong>What shipped:</strong> [End-to-end workflow working with real inputs + PostHog funnel events]</li>
-          <li><strong>What broke / changed in PRD:</strong> [Fill in]</li>
-          <li><strong>Cost & time this week:</strong> $[0.00] · [0] hours</li>
+          <li><strong>What shipped:</strong> The core workflow (paste → AI phrase cards → practice feedback → swipe → phrasebook) now has a full PostHog funnel. I added a <code>phrase_saved</code> event (numbers only, no phrase text) and built a funnel: Pageview → <code>paste_submitted</code> → <code>phrases_generated</code> → <code>card_swiped</code> → <code>phrase_saved</code>. I made the change the Week 3 way: branch <code>build-3</code> → PR #1 with what changed / why / what could break / how checked → manual browser test → merge. I added <code>AGENTS.md</code> rule 7 after the agent tried to turn off PostHog autocapture in Build 2: don't disable autocapture, session recording, or masking without asking.</li>
+          <li><strong>First evidence:</strong> In my own test session I saved 4 of 7 cards (57% save rate). The funnel shows tracking works end to end (median 2m 34s from page view to save), but both "persons" are me testing, so this isn't user evidence yet.</li>
+          <li><strong>What broke / changed in PRD:</strong> (1) The first <code>/api/phrases</code> call returned a 502 and worked on retry; not caused by this change, logged as a Build 4 fix. (2) The agent's first PR edit left broken backslashes in the description; it caught and fixed them. PRD v3: added the funnel and save rate as the core success metric.</li>
+          <li><strong>Cost & time this week:</strong> ~$0.004 in AI calls (~9 calls, ~11.8K tokens; about $0.01 cumulative; $2 hard cap on the key) · about 1 hour</li>
         </ul>
+        <img src="build3-funnel.png" alt="PostHog funnel: Pageview, paste_submitted, phrases_generated, card_swiped, phrase_saved" style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 8px;" />
+        <p style="font-size: 0.9em; color: #6b7280; margin-top: 6px;">PostHog core funnel from my own two test sessions (not user data).</p>
       </div>
 
       <div class="log-entry">
