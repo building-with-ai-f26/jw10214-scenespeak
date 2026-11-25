@@ -2,7 +2,7 @@
 
 **App type:** AI app. A plain Node server (`server.js`) calls OpenRouter on the visitor's behalf, plus a static page (`app/index.html`). **No database, no accounts, no login.** Learner data (phrasebook, known list) lives only in the visitor's own browser `localStorage`. The one secret is `OPENROUTER_API_KEY`, which stays on the server.
 
-*Status: draft for Build 3 (Go Live & Security Audit). Checked locally on 2026-11-24; not yet re-checked on the live Render URL.*
+*Status: draft for Build 3 (Go Live & Security Audit). Checked locally on 2026-11-24. Live at https://scenespeak-svse.onrender.com (Render free Web Service, commit `50bde8b`, `TRUST_PROXY=1`); the live rate-limit test passed and the cross-network check confirmed limits are per visitor.*
 
 ## What was checked
 
@@ -18,7 +18,10 @@
 | Cross-site / non-JSON POSTs | `text/plain` and no Content-Type | Was accepted; see "Found" |
 | Abuse volume | `tests/rate-limit-check.js` (30 calls) | 400 x20, then 429 from request #21 |
 | Spoofed `X-Forwarded-For` | 45 requests with a different header each | Ignored unless `TRUST_PROXY=1`; still limited |
-| Security headers | `curl -I /` | Missing before; present now |
+| Security headers | `curl -I /` | Missing before; present now (also seen on the live site) |
+| Live rate limit on Render | `tests/rate-limit-check.js` against the live URL | 400 x19, then 429 from request #20 (one earlier request in the window was a phone test), `Retry-After` 568 s, friendly message shown |
+| Live phone test | Paste, generate, swipe and save on a phone | Worked |
+| Per-visitor limit on Render | Used the live app from a phone on cellular data while the laptop's IP was still rate-limited | Phone worked, so each visitor gets their own allowance (`TRUST_PROXY=1` reads the right address) |
 
 ## Found, and fixed
 
@@ -34,9 +37,10 @@
 
 - **Credit drain from many IPs.** A per-IP limit does not stop a spread-out attacker. The real backstop is the spending cap on the OpenRouter key ($2). Keep it, and watch usage after launch.
 - **Limiter is in memory.** It resets when the server restarts or sleeps (Render free tier) and is not shared across instances. Fine for one small instance.
-- **`TRUST_PROXY` assumes the app is only reachable through Render's proxy.** I have not yet confirmed on the live service how many addresses Render puts in `X-Forwarded-For`. If the last entry turns out to be a shared edge address, all visitors would share one bucket (fails safe for cost, but real users would be blocked). **Verify after deploy** by running the check script from two different networks.
+- **`TRUST_PROXY` assumes the app is only reachable through Render's proxy.** Confirmed on the live service: a phone on cellular data was not blocked while the laptop's IP was rate-limited, so limits are per visitor. This was checked by hand from one phone and one laptop. If Render's proxy setup ever changes, re-run `tests/rate-limit-check.js` from two networks.
 - **No authentication.** Anyone with the URL can use the app, by design for now.
 - **Prompt injection** is mitigated in the prompts (pasted text and replies are labeled as data, and output is rendered as text, never as HTML). I did not test it against the live model, because that costs money. Worst case is an odd answer for the person who pasted it.
 - **Third parties see user text.** Pasted text goes to OpenRouter. PostHog masks all text and inputs in replays and autocapture (AGENTS.md rule 7 protects this), but the phrasebook is only as private as the visitor's browser.
 - **No dependency risk today** (no packages). Re-check if packages are ever added.
 - **No automated security tests.** The checks above were run by hand; only the rate-limit script is saved (`tests/rate-limit-check.js`).
+- **`HEAD /` returns 404** (the server only answers `GET`). Harmless for visitors, but uptime monitors that use `HEAD` would report the site as down. Planned fix in Build 4.
