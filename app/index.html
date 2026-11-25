@@ -469,6 +469,7 @@
       known = addKnown(known, item.phrase); saveKnown(known); knownCount++;
     } else {
       book = addToBook(book, item); saveBook(book); savedCount++;
+      track("phrase_saved", { position: pos + 1, total: deck.length, saved_count: savedCount });
     }
     renderPhrasebook();
     track("card_swiped", { direction: direction, position: pos + 1, total: deck.length });
