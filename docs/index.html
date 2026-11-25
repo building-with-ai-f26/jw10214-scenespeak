@@ -232,6 +232,7 @@
       <h1>SceneSpeak</h1>
       <p class="tagline">SceneSpeak helps non-native English speakers learn professional English from the best: paste what you read or heard today (a lecture, podcast, or panel), see each key phrase explained in simple English with a real-life scene, then practice using it yourself.</p>
       <div class="cta-row">
+        <a class="btn" href="https://scenespeak-svse.onrender.com" target="_blank" rel="noopener">Try the live app →</a>
         <a class="btn" href="#live-demo" onclick="window.posthog && posthog.capture('clicked_try_product')">See the Product →</a>
         <a class="btn btn-secondary" href="#prd">Read the Living PRD</a>
         <a class="btn btn-secondary" href="#build-log">Weekly Build Log</a>
@@ -242,8 +243,9 @@
     <section id="live-demo">
       <h2>Product Showcase (Prototype / Live App / 2-Min Video)</h2>
       <p>
-        <strong>Current Status:</strong> Build 2: working local app with real AI (phrase detection + practice feedback), swipe review, and PostHog.<br />
-        <strong>Demo:</strong> Local app running on real AI. Flow: paste text → key phrases (one card at a time) → scene + listen &amp; repeat → "your turn" reply → AI feedback → swipe to save or mark as known.
+        <strong>Current Status:</strong> Build 3: live on Render with real AI (phrase detection + practice feedback), swipe review, PostHog, and a per-IP rate limit.<br />
+        <strong>Live app:</strong> <a href="https://scenespeak-svse.onrender.com" target="_blank" rel="noopener">scenespeak-svse.onrender.com</a> (free tier: the first visit after a pause can take about a minute to wake up).<br />
+        <strong>Demo (Build 2 video, recorded on the local app):</strong> Flow: paste text → key phrases (one card at a time) → scene + listen &amp; repeat → "your turn" reply → AI feedback → swipe to save or mark as known.
       </p>
       <p>
         <video src="build2-demo.mp4" poster="build2-demo-poster.jpg" autoplay muted loop playsinline controls style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 8px;" aria-label="SceneSpeak Build 2 demo: paste a coffee-chat text, get key phrase cards, practice a reply with AI feedback, swipe to save or hide, and see the phrasebook">
@@ -307,14 +309,14 @@
       <h3>3. How It Works Under the Hood & Riskiest Assumption (Week 2+)</h3>
       <p><strong>Riskiest Assumption:</strong> AI-picked phrases and scenario dialogues may feel generic rather than useful and natural to real learners. Success looks like: 3 classmates each use it on real class text and correctly use at least 3 new phrases in their own sentences, and say they would use it again next week.</p>
       <p><strong>How Build 2 tests it:</strong> I paste 3 real texts from my own classes (a reading, a lecture transcript, a podcast) and check whether at least 5 phrases per text are ones I would actually use.</p>
-      <p><strong>Simple Architecture:</strong> Build 2: browser page (app/index.html) → small local server (server.js on localhost:3000, which keeps the API key in .env) → OpenRouter AI model → up to 8 key phrases returned as JSON → shown one card at a time. Practice: the learner's reply goes to POST /api/feedback → the same AI model → short feedback. Analytics: PostHog records pageviews, clicks, and 5 custom events, with session replays that mask all user text. The phrasebook and the known list are stored in the browser's localStorage (no database).</p>
+      <p><strong>Simple Architecture:</strong> Build 3: browser page (app/index.html) → small Node server (server.js, hosted on Render's free tier; it keeps the API key in Render's environment variables and rate-limits each IP) → OpenRouter AI model → up to 8 key phrases returned as JSON → shown one card at a time. Practice: the learner's reply goes to POST /api/feedback → the same AI model → short feedback. Analytics: PostHog records pageviews, clicks, and 5 custom events, with session replays that mask all user text. The phrasebook and the known list are stored in the browser's localStorage (no database).</p>
 
       <h3>4. Unit Economics & Analytics Snapshot (Updated Weekly)</h3>
       <div class="grid-2">
         <div class="stat-box">
           <div class="stat-label">Cumulative Build Spend</div>
-          <div class="stat-value">$0.006</div>
-          <div class="stat-detail">26 AI calls, 21.1K tokens, measured on OpenRouter. The API key has a $2 hard cap.</div>
+          <div class="stat-value">≈ $0.01</div>
+          <div class="stat-detail">About 35 AI calls, ~33K tokens, measured on OpenRouter. The API key has a $2 hard cap. Hosting: $0 (Render free tier).</div>
         </div>
         <div class="stat-box">
           <div class="stat-label">Cost Per Run</div>
@@ -339,21 +341,24 @@
         <li>Pasted text capped at ~3,000 words</li>
         <li>Capped output length</li>
         <li>No automatic retries</li>
+        <li>Per-IP rate limit: 20 phrase requests and 40 feedback checks per 10 minutes (429 beyond that)</li>
         <li>Token count and cost logged for every call</li>
       </ul>
 
-      <h4>PRD v3 (Build 3)</h4>
+      <h4>PRD v3 (Build 3: go live + security)</h4>
       <ul>
         <li><strong>Core metric:</strong> save rate = <code>phrase_saved</code> ÷ cards shown (are the AI's picks useful?)</li>
         <li><strong>Funnel:</strong> Pageview → <code>paste_submitted</code> → <code>phrases_generated</code> → <code>card_swiped</code> → <code>phrase_saved</code></li>
-        <li><strong>Known issue:</strong> occasional 502 on the first AI call → add a retry or a clearer error in Build 4</li>
+        <li><strong>Hosting:</strong> live at <a href="https://scenespeak-svse.onrender.com" target="_blank" rel="noopener">scenespeak-svse.onrender.com</a> on Render's free Web Service (<code>node server.js</code>, no packages). The API key is a Render environment variable, never in Git.</li>
+        <li><strong>Security:</strong> per-IP rate limit (20 phrase requests and 40 feedback checks per 10 minutes), JSON-only API calls, security headers, request timeouts. No secrets in the repo or Git history; no database or accounts. Remaining: a spread-out attacker is only capped by the $2 key limit, and the limiter lives in memory (resets on restart). Full audit: <a href="https://github.com/building-with-ai-f26/jw10214-scenespeak/blob/main/SECURITY.md" target="_blank" rel="noopener">SECURITY.md</a>.</li>
+        <li><strong>Known issues:</strong> occasional 502 on the first AI call → add a retry or a clearer error in Build 4; the free tier sleeps when idle (first request can take about a minute); <code>HEAD /</code> returns 404 → fix in Build 4 (matters for uptime monitors)</li>
       </ul>
 
       <h4>Roadmap</h4>
       <ul>
         <li><strong>Build 2 (shipped):</strong> AI phrase detection, AI practice feedback, card-by-card swipe review, PostHog analytics.</li>
-        <li><strong>Build 3 (shipped):</strong> PostHog funnel and <code>phrase_saved</code> event.</li>
-        <li><strong>Build 4:</strong> Send the known list so the AI skips phrases you already know, an Undo button after swiping, a retry or clearer error for the 502, PDF and blog-link input, plus evals.</li>
+        <li><strong>Build 3 (shipped):</strong> Live on Render (free tier), per-IP rate limit and security audit, PostHog funnel and <code>phrase_saved</code> event.</li>
+        <li><strong>Build 4:</strong> Send the known list so the AI skips phrases you already know, an Undo button after swiping, a retry or clearer error for the 502, making <code>HEAD /</code> return 200 instead of 404, PDF and blog-link input, plus evals.</li>
         <li><strong>Build 5:</strong> Cloud launch and scene practice.</li>
         <li><strong>Later:</strong> Voice conversation (highest cost).</li>
       </ul>
@@ -385,12 +390,14 @@
       </div>
 
       <div class="log-entry">
-        <h3>Build 3 · Build.exe: The Core Workflow (Due Nov 23)</h3>
+        <h3>Build 3 · Go Live &amp; Security Audit (Due Nov 23)</h3>
         <ul>
-          <li><strong>What shipped:</strong> The core workflow (paste → AI phrase cards → practice feedback → swipe → phrasebook) now has a full PostHog funnel. I added a <code>phrase_saved</code> event (numbers only, no phrase text) and built a funnel: Pageview → <code>paste_submitted</code> → <code>phrases_generated</code> → <code>card_swiped</code> → <code>phrase_saved</code>. I made the change the Week 3 way: branch <code>build-3</code> → PR #1 with what changed / why / what could break / how checked → manual browser test → merge. I added <code>AGENTS.md</code> rule 7 after the agent tried to turn off PostHog autocapture in Build 2: don't disable autocapture, session recording, or masking without asking.</li>
+          <li><strong>What shipped:</strong> SceneSpeak is live at <a href="https://scenespeak-svse.onrender.com" target="_blank" rel="noopener">scenespeak-svse.onrender.com</a>, deployed on Render's free Web Service tier (Beginner lane; commit <code>50bde8b</code>, <code>TRUST_PROXY=1</code>). Before going public I added a per-IP rate limit to <code>/api/phrases</code> (20 per 10 minutes) and <code>/api/feedback</code> (40 per 10 minutes) that returns a 429 with a friendly message, and hardened the server: JSON-only API calls, security headers, request timeouts, and a real 413 for oversized pastes. The API key lives in Render's environment variables, not in Git. I also wrote <a href="https://github.com/building-with-ai-f26/jw10214-scenespeak/blob/main/SECURITY.md" target="_blank" rel="noopener">SECURITY.md</a> and added "Shipping" and "Ask me first" sections to <code>AGENTS.md</code>.</li>
+          <li><strong>Also shipped:</strong> A full PostHog funnel for the core workflow: Pageview → <code>paste_submitted</code> → <code>phrases_generated</code> → <code>card_swiped</code> → <code>phrase_saved</code>, with a new <code>phrase_saved</code> event (numbers only, no phrase text). I made that change the Week 3 way: branch <code>build-3</code> → PR #1 with what changed / why / what could break / how checked → manual browser test → merge. <code>AGENTS.md</code> rule 7 (added after the agent tried to turn off PostHog autocapture in Build 2): don't disable autocapture, session recording, or masking without asking.</li>
+          <li><strong>Live check:</strong> The live 429 test passed: 400 ×19, then 429 from request #20 (one earlier request in the window was my phone test), <code>Retry-After</code> 568s, friendly message shown. Phone test on the live app: it worked (pasted, generated, swiped and saved). Still to confirm: that a visitor on a different network gets their own allowance.</li>
           <li><strong>First evidence:</strong> In my own test session I saved 4 of 7 cards (57% save rate). The funnel shows tracking works end to end (median 2m 34s from page view to save), but both "persons" are me testing, so this isn't user evidence yet.</li>
-          <li><strong>What broke / changed in PRD:</strong> (1) The first <code>/api/phrases</code> call returned a 502 and worked on retry; not caused by this change, logged as a Build 4 fix. (2) The agent's first PR edit left broken backslashes in the description; it caught and fixed them. PRD v3: added the funnel and save rate as the core success metric.</li>
-          <li><strong>Cost & time this week:</strong> ~$0.004 in AI calls (~9 calls, ~11.8K tokens; about $0.01 cumulative; $2 hard cap on the key) · about 1 hour</li>
+          <li><strong>What broke / changed in PRD:</strong> (1) The first <code>/api/phrases</code> call returned a 502 and worked on retry; not caused by these changes, logged as a Build 4 fix. (2) Trying to break the app found and fixed: no rate limit, any Content-Type accepted on the API routes, oversized pastes dropped the connection instead of showing the "too long" message, and no security headers or timeouts. No real secrets were in the repo or Git history, and <code>.env</code> is gitignored. (3) The agent's first PR edit left broken backslashes in the description; it caught and fixed them. (4) <code>HEAD /</code> returns 404; logged as a Build 4 fix. PRD v3: added hosting, security, the funnel, and save rate as the core success metric.</li>
+          <li><strong>Cost &amp; time this week:</strong> ~$0.004 in AI calls (~9 calls, ~11.8K tokens; about $0.01 cumulative; $2 hard cap on the key) · $0 hosting (Render free tier) · about 2 hours</li>
         </ul>
         <img src="build3-funnel.png" alt="PostHog funnel: Pageview, paste_submitted, phrases_generated, card_swiped, phrase_saved" style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 8px;" />
         <p style="font-size: 0.9em; color: #6b7280; margin-top: 6px;">PostHog core funnel from my own two test sessions (not user data).</p>
