@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Phrase card: learn and speak</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Courier+Prime&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#e6ebf0}
+a{color:#1b2430}a:hover{color:#4a5666}
+button{font:inherit}
+button:focus-visible,a:focus-visible,textarea:focus-visible{outline:3px solid #1b2430;outline-offset:3px}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #e6ebf0; color: #1b2430; font-family: 'Atkinson Hyperlegible', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 16px; line-height: 1.5; overflow: hidden">
+<div style="display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; padding: 6px 8px 0">
+<a href="Detail.dc.html" aria-label="Back" style="display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; color: #1b2430"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></a>
+<div style="display: flex; flex-direction: column; align-items: center">
+<span style="font-size: 15px; font-weight: 700">{{ counter }}</span>
+<div style="display: flex"><sc-for list="{{ dots }}" as="d" hint-placeholder-count="5"><button type="button" onClick="{{ d.go }}" aria-label="{{ d.label }}" style="width: 22px; height: 24px; border: 0; background: none; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer"><span style="width: {{ d.w }}; height: 7px; border-radius: 4px; background: {{ d.bg }}"></span></button></sc-for></div>
+</div>
+<span></span>
+</div>
+
+<div onPointerDown="{{ down }}" onPointerUp="{{ up }}" style="position: relative; margin: 8px 16px 0; height: 716px; perspective: 1400px; touch-action: pan-y">
+<div aria-hidden="true" style="position: absolute; top: 14px; bottom: 14px; right: -26px; width: 40px; background: #ffffff; opacity: 0.7; border-radius: 16px"></div>
+<div style="position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: {{ motion }}; transform: {{ turn }}">
+
+<section aria-hidden="{{ frontHidden }}" style="position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; background: #ffffff; border-radius: 16px; padding: 16px 18px 18px; box-shadow: 0 1px 0 #b8c3cf; box-sizing: border-box; display: flex; flex-direction: column">
+<div style="display: flex; align-items: flex-start; gap: 12px">
+<div style="flex: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; padding-top: 6px" aria-label="{{ stepLabel }}">
+<sc-for list="{{ steps }}" as="st" hint-placeholder-count="2"><div><div style="height: 4px; border-radius: 2px; background: {{ st.bar }}"></div><div style="font-size: 12px; margin-top: 4px; color: {{ st.color }}; font-weight: {{ st.weight }}">{{ st.label }}</div></div></sc-for>
+</div>
+</div>
+<div style="display: flex; align-items: center; gap: 4px; margin-top: 18px">
+<h1 style="margin: 0; font-size: 34px; line-height: 1.15">{{ ph.p }}</h1>
+<button type="button" aria-label="Hear the phrase" style="flex: 0 0 44px; height: 44px; border: 0; background: none; color: #4a5666; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z"></path><path d="M16 8.5a5 5 0 0 1 0 7"></path></svg></button>
+</div>
+<p style="margin: 6px 0 0; font-size: 18px; color: #4a5666">{{ ph.m }}</p>
+<div style="margin-top: 18px; font-size: 14px; color: #56616f">In the paragraph</div>
+<p style="margin: 2px 0 0; font-style: italic">“<sc-for list="{{ quote }}" as="part" hint-placeholder-count="3"><sc-if value="{{ part.mark }}" hint-placeholder-val="{{ false }}"><mark style="background: linear-gradient(transparent 14%, #ffe46b 14%, #ffe46b 86%, transparent 86%); color: #1b2430; font-weight: 700; font-style: normal; padding: 0 2px">{{ part.t }}</mark></sc-if><sc-if value="{{ part.plain }}" hint-placeholder-val="{{ true }}">{{ part.t }}</sc-if></sc-for>”</p>
+<div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid #e3e8ee">
+<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px">
+<span style="font-size: 14px; font-weight: 700; color: #56616f">Scene: {{ ph.where }}</span>
+<button type="button" style="display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; border: 1.5px solid #c9d2dc; border-radius: 999px; background: #fff; color: #1b2430; font-weight: 700; font-size: 14px; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z"></path><path d="M16 8.5a5 5 0 0 1 0 7"></path></svg> Listen</button>
+</div>
+<sc-for list="{{ ph.scene }}" as="l" hint-placeholder-count="3"><div style="margin-bottom: 8px"><div style="font-size: 14px; font-weight: 700; color: #4a5666">{{ l.who }}</div><div style="font-family: 'Courier Prime', 'Courier New', monospace; font-size: 15px">{{ l.said }}</div></div></sc-for>
+</div>
+<div style="margin-top: auto; display: flex; gap: 10px"><button type="button" onClick="{{ toggleSave }}" aria-label="{{ saveLabel }}" aria-pressed="{{ savedStr }}" style="flex: 0 0 52px; height: 52px; border: 2px solid #1b2430; border-radius: 26px; background: #fff; color: #1b2430; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" fill="{{ saveFill }}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12v16l-6-4-6 4z"></path></svg></button><button type="button" onClick="{{ toSpeak }}" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 52px; border: 0; border-radius: 999px; background: #1b2430; color: #ffffff; font-weight: 700; font-size: 17px; cursor: pointer">Flip to speak<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3"></path><path d="M18 3v4h-4M6 21v-4h4"></path></svg></button></div>
+</section>
+
+<section aria-hidden="{{ backHidden }}" style="position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; transform: rotateY(180deg); background: #ffffff; border-radius: 16px; box-shadow: 0 1px 0 #b8c3cf; box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden">
+<div style="padding: 16px 18px 10px; border-bottom: 1px solid #e3e8ee">
+<div style="display: flex; align-items: flex-start; gap: 12px">
+<div style="flex: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; padding-top: 6px" aria-label="{{ stepLabel }}">
+<sc-for list="{{ steps }}" as="st" hint-placeholder-count="2"><div><div style="height: 4px; border-radius: 2px; background: {{ st.bar }}"></div><div style="font-size: 12px; margin-top: 4px; color: {{ st.color }}; font-weight: {{ st.weight }}">{{ st.label }}</div></div></sc-for>
+</div>
+<div style="display: flex; margin: -8px -10px 0 0"><button type="button" onClick="{{ toggleSave }}" aria-label="{{ saveLabel }}" aria-pressed="{{ savedStr }}" style="width: 44px; height: 44px; border: 0; border-radius: 22px; background: transparent; color: #1b2430; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" fill="{{ saveFill }}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12v16l-6-4-6 4z"></path></svg></button><button type="button" onClick="{{ toLearn }}" aria-label="Flip back to meaning" style="width: 44px; height: 44px; border: 0; border-radius: 22px; background: transparent; color: #1b2430; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3"></path><path d="M18 3v4h-4M6 21v-4h4"></path></svg></button></div>
+</div>
+<div style="display: flex; align-items: center; gap: 8px; margin-top: 8px">
+<div style="flex: 1; font-size: 20px; font-weight: 700; line-height: 1.2">{{ ph.p }}</div>
+<span style="font-size: 13px; font-weight: 700; color: {{ turnColor }}">{{ turnLabel }}</span>
+</div>
+<div style="margin-top: 8px; background: #fff8d6; color: #5c4a00; border-radius: 8px; padding: 8px 10px; font-size: 14px">Goal: use the phrase within 3 replies to complete it.</div>
+</div>
+<div style="flex: 1; overflow-y: auto; padding: 14px 14px 8px; display: flex; flex-direction: column; gap: 10px">
+<div style="align-self: flex-start; max-width: 85%; background: #f1f3f6; padding: 10px 12px; border-radius: 16px 16px 16px 4px; font-size: 15px">{{ ph.ask }}</div>
+<sc-if value="{{ sent }}" hint-placeholder-val="{{ false }}">
+<div style="align-self: flex-end; max-width: 85%; background: #dbe7f6; padding: 10px 12px; border-radius: 16px 16px 4px 16px; font-size: 15px">{{ ph.reply }}</div>
+<div style="align-self: flex-start; max-width: 85%; background: #e7f4ec; color: #1f5f3f; padding: 10px 12px; border-radius: 16px 16px 16px 4px; font-size: 15px">{{ ph.fb }}</div>
+<div style="align-self: center; display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 700; color: #24704a"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"></path></svg>Completed in reply 1 of 3</div>
+<div style="align-self: flex-start; max-width: 85%; background: #f1f3f6; padding: 10px 12px; border-radius: 16px 16px 16px 4px; font-size: 15px">{{ ph.next }}</div>
+</sc-if>
+</div>
+<sc-if value="{{ voiceMode }}" hint-placeholder-val="{{ true }}">
+<div style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 10px 14px 14px; border-top: 1px solid #e3e8ee">
+<div><button type="button" onClick="{{ toKeys }}" aria-label="Type instead" style="width: 44px; height: 44px; border: 0; border-radius: 22px; background: #f1f3f6; color: #1b2430; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"></rect><path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10"></path></svg></button></div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 4px">
+<button type="button" onClick="{{ send }}" aria-label="Tap to speak your reply" style="width: 68px; height: 68px; border: 0; border-radius: 34px; background: #1b2430; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg></button>
+<span style="font-size: 13px; color: #56616f">Tap to speak</span>
+</div>
+<span></span>
+</div>
+</sc-if>
+<sc-if value="{{ keyMode }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; align-items: flex-end; gap: 8px; padding: 10px 12px 14px; border-top: 1px solid #e3e8ee">
+<button type="button" onClick="{{ toVoice }}" aria-label="Speak instead" style="flex: 0 0 44px; height: 44px; border: 0; border-radius: 22px; background: #f1f3f6; color: #1b2430; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg></button>
+<label for="msg" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Your reply</label>
+<textarea id="msg" rows="2" placeholder="Type your reply" style="flex: 1; box-sizing: border-box; padding: 10px 12px; font: inherit; font-size: 15px; border: 1.5px solid #c9d2dc; border-radius: 18px; resize: none; color: #1b2430"></textarea>
+<button type="button" onClick="{{ send }}" aria-label="Send" style="flex: 0 0 44px; height: 44px; border-radius: 22px; border: 0; background: #1b2430; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"></path></svg></button>
+</div>
+</sc-if>
+</section>
+</div>
+</div>
+<div style="display: flex; justify-content: flex-end; padding: 10px 22px 0">
+<span style="display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: #56616f">Swipe for next<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"></path></svg></span>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"side":{"editor":"enum","options":["front","back"],"default":"front"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    var back = props.side === 'back';
+    this.state = { idx: 0, back: back, sent: back, saved: {}, keys: false };
+    this.sx = null;
+  }
+  split(text, phrases) {
+    var parts = [], rest = text;
+    while (rest.length) {
+      var best = -1, hit = null, low = rest.toLowerCase();
+      phrases.forEach(function (p) { var i = low.indexOf(p.toLowerCase()); if (i > -1 && (best === -1 || i < best)) { best = i; hit = p; } });
+      if (best === -1) { parts.push({ t: rest, mark: false, plain: true }); break; }
+      if (best > 0) parts.push({ t: rest.slice(0, best), mark: false, plain: true });
+      parts.push({ t: rest.slice(best, best + hit.length), mark: true, plain: false });
+      rest = rest.slice(best + hit.length);
+    }
+    return parts;
+  }
+  go(i) {
+    if (i < 0 || i > 4 || i === this.state.idx) return;
+    this.setState({ idx: i, back: false, sent: false, keys: false });
+  }
+  renderVals() {
+    var self = this, s = this.state, back = s.back;
+    var P = [
+      { p: 'push back on', m: 'To disagree with a plan or request and ask for a change, politely.', q: "Honestly, I'd push back on that timeline.", where: 'weekly planning',
+        scene: [{ who: 'Manager', said: 'Can your team ship the redesign by Friday?' }, { who: 'You', said: 'I have to push back on Friday. Can we aim for Wednesday?' }, { who: 'Manager', said: 'Fair. Wednesday works.' }],
+        ask: "I'm your VP. Can we launch on the 3rd instead of the 10th? Sales is pushing for it.", reply: 'I want to push back on the 3rd. If we rush, the launch will be half-baked.',
+        fb: "Nice, that works. Even more natural: “I'd push back on the 3rd. If we rush it, we'll ship something half-baked.”", next: 'Fair point. What date would you commit to instead?' },
+      { p: 'half-baked', m: 'Not fully planned or finished; done too fast.', q: "we'll ship something half-baked.", where: 'design review',
+        scene: [{ who: 'Designer', said: 'Should we show the new flow to customers?' }, { who: 'You', said: 'Not yet. It still feels half-baked.' }, { who: 'Designer', said: 'Okay, one more week.' }],
+        ask: "I'm your client lead. The prototype is ready, right? Can we demo it tomorrow?", reply: "I'd wait. It still feels half-baked.",
+        fb: "Good. Add a reason to sound confident: “It still feels half-baked. Checkout isn't tested yet.”", next: 'Got it. When do you think it will be ready?' },
+      { p: 'take a step back', m: 'To pause and look at the bigger picture.', q: "Let's take a step back, agree on what really matters.", where: 'team debate',
+        scene: [{ who: 'Engineer', said: "We've argued about this button for an hour." }, { who: 'You', said: "Let's take a step back. What problem are we solving?" }, { who: 'Engineer', said: 'Good call.' }],
+        ask: "I'm your manager. We keep adding features, but signups are flat. What should we do?", reply: "Let's take a step back and look at why people leave.",
+        fb: 'Great. Clear and natural.', next: 'Okay. Where would you start?' },
+      { p: 'moves the needle', m: 'Makes a noticeable, measurable difference.', q: 'agree on what really moves the needle.', where: 'roadmap meeting',
+        scene: [{ who: 'Lead', said: 'We have ten ideas for next quarter.' }, { who: 'You', said: "Let's pick the two that really move the needle." }, { who: 'Lead', said: 'Agreed.' }],
+        ask: "I'm your design lead. Should we redesign the settings page next?", reply: "I don't think it moves the needle.",
+        fb: "Correct. Even better with a suggestion: “I don't think it moves the needle. Onboarding would matter more.”", next: 'Interesting. Why onboarding?' },
+      { p: 'commit to', m: 'To promise to do something, often by a set date.', q: 'then commit to a date we actually believe in.', where: 'stand-up',
+        scene: [{ who: 'PM', said: 'Can you finish the API this sprint?' }, { who: 'You', said: 'I can commit to Thursday.' }, { who: 'PM', said: 'Perfect.' }],
+        ask: "I'm your client. When can your team deliver the new dashboard?", reply: 'We can commit to the 15th.',
+        fb: 'Perfect. Confident and specific.', next: "Great, I'll let my team know." }
+    ];
+    var ph = P[s.idx], saved = !!s.saved[s.idx];
+    var reduce = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    return {
+      ph: ph,
+      quote: this.split(ph.q, [ph.p]),
+      counter: (s.idx + 1) + ' of 5',
+      dots: P.map(function (x, i) { return { label: 'Phrase ' + (i + 1) + ': ' + x.p, bg: i === s.idx ? '#1b2430' : '#b8c3cf', w: i === s.idx ? '18px' : '7px', go: function () { self.go(i); } }; }),
+      steps: ['Learn', 'Speak'].map(function (l, i) {
+        var active = back ? 1 : 0;
+        return { label: l, bar: i <= active ? '#1b2430' : '#dde3ea', color: i === active ? '#1b2430' : '#56616f', weight: i === active ? 700 : 400 };
+      }),
+      stepLabel: back ? 'Step 2 of 2: Speak' : 'Step 1 of 2: Learn',
+      turn: back ? 'rotateY(180deg)' : 'rotateY(0deg)',
+      motion: reduce ? 'none' : 'transform 0.5s ease',
+      frontHidden: back ? 'true' : 'false',
+      backHidden: back ? 'false' : 'true',
+      toLearn: function () { self.setState({ back: false }); },
+      toSpeak: function () { self.setState({ back: true }); },
+      saveFill: saved ? 'currentColor' : 'none',
+      saveLabel: saved ? 'Saved to phrasebook' : 'Save to phrasebook',
+      savedStr: saved ? 'true' : 'false',
+      toggleSave: function () { var m = Object.assign({}, self.state.saved); m[self.state.idx] = !m[self.state.idx]; self.setState({ saved: m }); },
+      sent: s.sent,
+      turnLabel: s.sent ? 'Completed' : 'Reply 1 of 3',
+      turnColor: s.sent ? '#24704a' : '#56616f',
+      voiceMode: !s.keys, keyMode: s.keys,
+      toKeys: function () { self.setState({ keys: true }); },
+      toVoice: function () { self.setState({ keys: false }); },
+      send: function () { self.setState({ sent: true }); },
+      down: function (e) { var t = e.target; if (t && t.closest && t.closest('textarea, button, a, input')) { self.sx = null; return; } self.sx = e.clientX; },
+      up: function (e) {
+        if (self.sx === null) return;
+        var dx = e.clientX - self.sx; self.sx = null;
+        if (dx < -50) self.go(self.state.idx + 1);
+        else if (dx > 50) self.go(self.state.idx - 1);
+        else if (Math.abs(dx) < 8 && !self.state.back) self.setState({ back: true });
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

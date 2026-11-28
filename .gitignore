@@ -28,3 +28,9 @@ build/
 out/
 .DS_Store
 *.log
+
+# Transcript experiment output (contains transcript text, never commit)
+content-test/
+
+# Library cards built from transcripts (see docs/content-plan.md, open questions)
+app/library.json

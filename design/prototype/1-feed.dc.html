@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SceneSpeak feed</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Courier+Prime&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#e6ebf0}
+a{color:#1b2430}a:hover{color:#4a5666}
+button{font:inherit}
+button:focus-visible,a:focus-visible,textarea:focus-visible{outline:3px solid #1b2430;outline-offset:3px}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; display: flex; flex-direction: column; box-sizing: border-box; background: #e6ebf0; color: #1b2430; font-family: 'Atkinson Hyperlegible', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 16px; line-height: 1.5">
+<header style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 6px">
+<span style="font-size: 22px; font-weight: 700">SceneSpeak</span>
+
+</header>
+<div style="flex: 1; overflow-y: auto">
+<div style="padding: 4px 16px 0">
+<h1 style="margin: 0; font-size: 24px; line-height: 1.2">Tech chats &amp; meetings</h1>
+<p style="margin: 2px 0 0; color: #4a5666; font-size: 15px">Real lines from Lenny's Podcast. Learn them, then speak them with AI.</p>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 20px; padding: 16px 16px 24px">
+<sc-for list="{{ cards }}" as="card" hint-placeholder-count="4">
+<article style="background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 0 #b8c3cf">
+<div style="background: {{ card.tint }}; color: #1b2430; padding: 20px 20px 24px; min-height: 236px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; gap: 16px">
+<span style="font-size: 13px; color: #4a5666">Lenny's Podcast · [Guest name]</span>
+<p style="margin: 0; font-size: 24px; line-height: 1.38"><sc-for list="{{ card.parts }}" as="part" hint-placeholder-count="3"><sc-if value="{{ part.mark }}" hint-placeholder-val="{{ false }}"><mark style="background: #ffe46b; color: #1b2430; font-weight: 700; padding: 0 3px; border-radius: 2px">{{ part.t }}</mark></sc-if><sc-if value="{{ part.plain }}" hint-placeholder-val="{{ true }}">{{ part.t }}</sc-if></sc-for></p>
+</div>
+<div style="padding: 16px 18px 18px">
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px">
+<span style="font-size: 19px; font-weight: 700; line-height: 1.25">{{ card.title }}</span>
+<span style="font-size: 13px; font-weight: 700; color: {{ card.statusColor }}; white-space: nowrap">{{ card.statusLabel }}</span>
+</div>
+<div style="font-size: 14px; color: #56616f; margin-top: 2px">{{ card.meta }}</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-top: 14px">
+<sc-for list="{{ card.steps }}" as="st" hint-placeholder-count="2">
+<div><div style="height: 5px; border-radius: 3px; background: {{ st.bar }}"></div><div style="font-size: 12px; color: #4a5666; margin-top: 4px">{{ st.label }}</div></div>
+</sc-for>
+</div>
+<a href="Detail.dc.html" style="display: flex; align-items: center; justify-content: center; min-height: 48px; margin-top: 14px; background: #1b2430; color: #ffffff; border-radius: 999px; text-decoration: none; font-weight: 700; font-size: 16px">{{ card.cta }}</a>
+</div>
+</article>
+</sc-for>
+
+<p style="margin: 0; font-size: 13px; color: #56616f">Short excerpts from Lenny's Podcast, for personal learning. Full episodes at <a href="https://www.lennyspodcast.com">lennyspodcast.com</a>. Sample text is placeholder.</p>
+</div>
+</div>
+<nav aria-label="Main" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: center; background: #ffffff; border-top: 1px solid #d5dce4; padding: 6px 8px 22px">
+<a href="Main.dc.html" aria-current="page" style="display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: 48px; justify-content: center; text-decoration: none; color: #1b2430; font-size: 12px; font-weight: 700"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z"></path></svg>Feed</a>
+<a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: 48px; justify-content: center; text-decoration: none; color: #1b2430; font-size: 12px; font-weight: 700"><span style="width: 44px; height: 32px; border-radius: 10px; background: #1b2430; color: #fff; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></span>Your text</a>
+<a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: 48px; justify-content: center; text-decoration: none; color: #56616f; font-size: 12px"><span style="position: relative; display: flex"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12v16l-6-4-6 4z"></path></svg><span style="position: absolute; top: -4px; right: -10px; min-width: 18px; height: 18px; border-radius: 9px; background: #ffe46b; color: #1b2430; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center">3</span></span>Phrasebook</a>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  split(text, phrases) {
+    var parts = [], rest = text;
+    while (rest.length) {
+      var best = -1, hit = null, low = rest.toLowerCase();
+      phrases.forEach(function (p) { var i = low.indexOf(p.toLowerCase()); if (i > -1 && (best === -1 || i < best)) { best = i; hit = p; } });
+      if (best === -1) { parts.push({ t: rest, mark: false, plain: true }); break; }
+      if (best > 0) parts.push({ t: rest.slice(0, best), mark: false, plain: true });
+      parts.push({ t: rest.slice(best, best + hit.length), mark: true, plain: false });
+      rest = rest.slice(best + hit.length);
+    }
+    return parts;
+  }
+  renderVals() {
+    var self = this;
+    var data = [
+      { title: 'Pushing back on a deadline', s: 'new', n: 5, line: "Let's take a step back and agree on what really moves the needle.", ph: ['take a step back', 'moves the needle'] },
+      { title: 'Getting everyone aligned', s: 'progress', n: 4, line: "I loop in sales early, and if a decision gets stuck, we circle back.", ph: ['loop in', 'circle back'] },
+      { title: 'Asking a leader for advice', s: 'new', n: 4, line: "I'd love to pick your brain. No pressure at all.", ph: ['pick your brain', 'No pressure at all'] },
+      { title: "Explaining a bet that didn't work", s: 'done', n: 4, line: "It didn't pan out, but the silver lining is we learned what users don't want.", ph: ['pan out', 'silver lining'] }
+    ];
+    var on = '#1b2430', off = '#dde3ea';
+    var fill = { new: 0, progress: 1, done: 2 };
+    var tints = ['#e3edfa', '#e2f3ea', '#fbeee0', '#ece9fa'];
+    var labels = ['Learn', 'Speak'];
+    return {
+      cards: data.map(function (d, i) {
+        return {
+          title: d.title, tint: tints[i % 4], parts: self.split(d.line, d.ph), meta: d.n + ' phrases · about ' + (d.n + 1) + ' min',
+          statusLabel: { new: 'New', progress: 'In progress', done: 'Done' }[d.s],
+          statusColor: { new: '#56616f', progress: '#8a5300', done: '#24704a' }[d.s],
+          cta: { new: 'Learn', progress: 'Continue', done: 'Review' }[d.s],
+          steps: labels.map(function (l, i) { return { label: l, bar: i < fill[d.s] ? on : off }; })
+        };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>
