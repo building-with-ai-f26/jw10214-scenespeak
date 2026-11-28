@@ -12,7 +12,7 @@
 - **Run locally:** `node server.js` then open http://localhost:3000
 - **Run deterministic tests:** None yet (manual check in the browser)
 - **Rate-limit check (free, never calls the AI):** with the server running, `node tests/rate-limit-check.js` (or pass a URL, e.g. your Render URL). Expect 400s, then 429s from request #21.
-- **Run model evals:** None yet (planned for Build 4)
+- **Run model evals:** with the server running, `node tests/feedback-check.js` (real, paid AI calls: ask first; `--dry-run` is free, `--runs=3` repeats each case). Broader evals are planned for Build 4.
 
 ## 3. Non-Negotiable Engineering Rules
 1. **Plan before coding:** Before touching multiple files, propose a brief plan and wait for approval.

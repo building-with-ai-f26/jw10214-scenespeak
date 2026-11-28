@@ -379,4 +379,6 @@ async function main() {
   console.log("Saved to " + outFile);
 }
 
-main().catch((e) => { console.error(e.message); process.exit(1); });
+// Run only when called directly, so other scripts can reuse these helpers.
+if (require.main === module) main().catch((e) => { console.error(e.message); process.exit(1); });
+module.exports = { loadEnv, extractJson, containsWords };
